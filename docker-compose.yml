@@ -1,0 +1,49 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    container_name: ahd_influxdb
+    ports:
+      - "8086:8086"
+    volumes:
+      - ahd_influxdb_data:/var/lib/influxdb2
+      - ahd_influxdb_conf:/etc/influxdb2
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=airahome
+      - DOCKER_INFLUXDB_INIT_ORG=airahome
+      - DOCKER_INFLUXDB_INIT_BUCKET=bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=airahome-dashboard-token
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.1.0
+    container_name: ahd_grafana
+    ports:
+      - "4000:3000"
+    volumes:
+      - ahd_grafana_data:/var/lib/grafana
+      - ahd_grafana_conf:/etc/grafana
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=airahome
+      - GF_PANELS_DISABLE_SANITIZE_HTML=true # Disable HTML sanitization for custom panels
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    container_name: ahd_nginx
+    ports:
+      - "4001:80"
+    volumes:
+      - ./static:/usr/share/nginx/html:ro # Mount local folder to Nginx's default static directory
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+    restart: unless-stopped
+
+volumes:
+  ahd_influxdb_data:
+  ahd_influxdb_conf:
+  ahd_grafana_data:
+  ahd_grafana_conf:
