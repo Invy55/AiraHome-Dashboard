@@ -16,15 +16,31 @@ window.addEventListener('load', function() {
     } else {
         console.error('Failed to load the SVG document.');
     }
-    // Load data from GET data param provided by Grafana
-    let params = new URLSearchParams(document.location.search);
-    let data = JSON.parse(params.get("data") ? params.get("data") : "{}")
-    if (!data || Object.keys(data).length == 0) {
-        console.warn('No data provided in the URL parameters.');
+    // Hide battery low indicators by default
+    showObject('zone_1_low_battery', false);
+    showObject('zone_2_low_battery', false);
+    // Hide cold/hot indicators by default
+    showObject('zone_1_cold', false);
+    showObject('zone_1_hot', false);
+    showObject('zone_2_cold', false);
+    showObject('zone_2_hot', false);
+    // Load data from GET data param
+    let params, data;
+    try {
+        params = new URLSearchParams(document.location.search);
+        data = JSON.parse(params.get("data") ? params.get("data") : "{}")
+        if (!data || Object.keys(data).length == 0) {
+            console.warn('No data provided in the URL parameters.');
+            showObject('online_status', false);
+            showObject('error_status', false);
+        }
+        console.log('Data loaded from URL parameters:', data);
+    } catch (error) {
+        console.error('Error parsing data from URL parameters:', error);
         showObject('online_status', false);
         showObject('error_status', false);
+        return;
     }
-    console.log('Data loaded from URL parameters:', data);
     // Update SVG elements based on the data
     addPulse('online_status');
     // Heatpump active state, allowed states:
@@ -77,14 +93,6 @@ window.addEventListener('load', function() {
     updateSVGText('zone_2_humidity', data['thermostat_2']['humidity'] || '??');
     updateSVGText('zone_2_cur_temperature', data['thermostat_2']['actual_temperature'] || '??');
     updateSVGText('zone_2_tar_temperature', '--');
-    // Hide battery low indicators if battery is not low
-    showObject('zone_1_low_battery', data['thermostat_1']['warning_low_battery_level'] === 'true' || false);
-    showObject('zone_2_low_battery', data['thermostat_2']['warning_low_battery_level'] === 'true' || false);
-    // Hide cold/hot indicators by default
-    showObject('zone_1_cold', false);
-    showObject('zone_1_hot', false);
-    showObject('zone_2_cold', false);
-    showObject('zone_2_hot', false);
 
     // Zones pumps
     switch(data['thermostat_1']['current_pump_mode_state']) {
@@ -128,7 +136,9 @@ window.addEventListener('load', function() {
             console.warn(`Unknown pump mode state for thermostat 2: ${data['thermostat_2']['current_pump_mode_state']}`);
     }
     
-    // TODO choose cold hot or none for zones heating/cooling status
+    // Hide battery low indicators if battery is not low
+    showObject('zone_1_low_battery', data['thermostat_1']['warning_low_battery_level'] === 'true' || false);
+    showObject('zone_2_low_battery', data['thermostat_2']['warning_low_battery_level'] === 'true' || false);
 
     // Online and error status
     showObject('error_status', data['error']['active'] === 'true' || false);
