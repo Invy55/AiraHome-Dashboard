@@ -158,11 +158,15 @@ class AiraHomeClient():
         self.logger.info("AiraHomeClient closed successfully.")
 
     def aira_task(self):
-        if not self.authenticated and self._should_retry():
-            self.logger.info("Re-authenticating with AiraHome...")
-            self.aira_auth()
-            if not self.authenticated:
-                self.logger.info("AiraHome authentication failed. Retrying in 5 minutes...")
+        if not self.authenticated:
+            if self._should_retry():
+                self.logger.info("Re-authenticating with AiraHome...")
+                self.aira_auth()
+                if not self.authenticated:
+                    self.logger.info("AiraHome authentication failed. Retrying in 5 minutes...")
+                    return
+            else:
+                self.logger.debug("Waiting before trying to relog...")
                 return
 
         try:
