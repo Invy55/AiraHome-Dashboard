@@ -33,6 +33,7 @@ window.addEventListener('load', function() {
             console.warn('No data provided in the URL parameters.');
             showObject('online_status', false);
             showObject('error_status', false);
+            return;
         }
         console.log('Data loaded from URL parameters:', data);
     } catch (error) {
@@ -141,10 +142,11 @@ window.addEventListener('load', function() {
     showObject('zone_2_low_battery', data['thermostat_2']['warning_low_battery_level'] === 'true' || false);
 
     // Online and error status
+    if(data.hasOwnProperty("error"))
     showObject('error_status', data['error']['active'] === 'true' || false);
 
     // done -> tell grafana
-    window.parent.postMessage({ action: 'updateIsLoaded', value: '1' }, document.referrer);
+    window.parent.postMessage({ action: window.location.href, value: 1 }, document.referrer);
 });
 
 // map ids from python to svg elements ids

@@ -26,10 +26,14 @@ services:
       - ahd_grafana_data:/var/lib/grafana
       - ahd_grafana_conf:/etc/grafana
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=airahome
       - GF_PANELS_DISABLE_SANITIZE_HTML=true # Disable HTML sanitization for custom panels
+    depends_on:
+      - influxdb
     restart: unless-stopped
 
   web:
@@ -40,6 +44,42 @@ services:
     volumes:
       - ./static:/usr/share/nginx/html:ro # Mount local folder to Nginx's default static directory
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro # Custom Nginx configuration
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ahd_app
+    volumes:
+      - ./app:/app  # Mount the application code for live updates
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+    #environment:
+      # found at app/.env
+      # cp .env.sample .env and edit
+    depends_on:
+      - influxdb
+    command: python app.py
+    restart: unless-stopped
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ahd_api
+    ports:
+      - 80
+    volumes:
+      - ./app:/app  # Mount the application code for live updates
+      - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
+    #environment:
+      # found at app/.env
+      # cp .env.sample .env and edit
+    depends_on:
+      - influxdb
+    command: python api.py
     restart: unless-stopped
 
 volumes:

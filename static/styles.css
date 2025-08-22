@@ -5,11 +5,16 @@ body {
     overflow: hidden;
 }
 
+#view {
+    max-width: 100%;
+}
+
 .hot-line {
     stroke: #b63a3a !important;
     
 }
 .hot-head {
+    /*stroke: #b63a3a !important;*/
     fill: #b63a3a !important;
 }
 
@@ -18,6 +23,7 @@ body {
 }
 
 .return-head {
+    /*stroke: #eb7f00 !important;*/
     fill: #eb7f00 !important;
 }
 
@@ -26,6 +32,7 @@ body {
 }
 
 .cold-head {
+    /*stroke: #007fff !important;*/
     fill: #007fff !important;
 }
 
@@ -63,7 +70,7 @@ body {
         opacity: 1;
     }
     50% {
-        /* ~8% zoom */
+        /* ~8% larger */
         -ms-transform: scale(1.08);
         -moz-transform: scale(1.08);
         -webkit-transform: scale(1.08);
@@ -79,6 +86,7 @@ body {
     -ms-animation: pulse 2s ease-in-out infinite;
     -o-animation: pulse 2s ease-in-out infinite;
     animation: pulse 2s ease-in-out infinite;
+    /*transform-origin: 22.183973px 22.183974px;*/
   }
 
 @-webkit-keyframes rotating /* Safari and Chrome */ {
@@ -115,4 +123,7 @@ body {
   -ms-animation: rotating 5s linear infinite;
   -o-animation: rotating 5s linear infinite;
   animation: rotating 5s linear infinite;
+  
+  /*transform-origin: 51.741687px 160.9408px;*/
+  /*transform: scale(-1, 1);*/
 }

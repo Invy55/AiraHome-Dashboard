@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Commands Form</title>
+        <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="top-bar">
+        <div class="dropdown" id="dropdown">
+            <input type="text" id="commandInput" placeholder="Select command...">
+            <ul id="commandList"></ul>
+        </div>
+        <button onclick="sendAction()" id="sendButton">Send</button>
+    </div>
+
+    <div class="fields-box" id="fieldsBox"></div>
+
+    <div class="large-box" id="outputBox"></div>
+    <script src="script.js"></script>
+</body>
+</html>

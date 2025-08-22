@@ -1,0 +1,15 @@
+apiVersion: 1
+datasources:
+  - name: influxdb
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: airahome
+      defaultBucket: bucket
+      httpMode: POST
+    secureJsonData:
+      token: airahome-dashboard-token
+    isDefault: true
+    editable: true
