@@ -33,6 +33,10 @@ docker compose up -d
 
 4. Done!
 Navigate to http://localhost:4000/d/beuirjjdi4cu8c/airahome-dashboard to check the dashboard out!
+> [!TIP]
+> The credentials are found in the docker compose file. Defaults user is `admin` with default password `airahome`
+
+
 > _Change localhost to your machine ip where the dashboard is running_
 
 ##
