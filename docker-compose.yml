@@ -21,7 +21,7 @@ services:
     image: grafana/grafana:12.1.0
     container_name: ahd_grafana
     ports:
-      - "4000:3000"
+      - "3000"
     volumes:
       - ahd_grafana_data:/var/lib/grafana
       - ahd_grafana_conf:/etc/grafana
@@ -31,6 +31,7 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=airahome
+      - GF_SERVER_ROOT_URL=http://localhost:4000
       - GF_PANELS_DISABLE_SANITIZE_HTML=true # Disable HTML sanitization for custom panels
     depends_on:
       - influxdb
@@ -40,7 +41,7 @@ services:
     image: nginx:alpine
     container_name: ahd_nginx
     ports:
-      - "4001:80"
+      - "4000:4000"
     volumes:
       - ./static:/usr/share/nginx/html:ro # Mount local folder to Nginx's default static directory
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
@@ -70,7 +71,7 @@ services:
       dockerfile: Dockerfile
     container_name: ahd_api
     ports:
-      - 80
+      - "80"
     volumes:
       - ./app:/app  # Mount the application code for live updates
       - /etc/localtime:/etc/localtime:ro  # Mount host's localtime (read-only)
