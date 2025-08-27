@@ -1,3 +1,5 @@
+const uri = window.location.protocol + "//" + window.location.hostname + ":" + window.location.port + "/ahd_api";
+
 // Build command list
 function buildCommandList(commandArray) {
     const commandList = document.getElementById("commandList");
@@ -148,7 +150,7 @@ function sendAction() {
     // Construct query string from fieldValues
     fieldValues["heatpump_id"] = heatpump_id; // add heatpump_id to params
     const queryParams = new URLSearchParams(fieldValues).toString();
-    const url = `../api/command/${encodeURIComponent(command)}?${queryParams}`;
+    const url = `${uri}/command/${encodeURIComponent(command)}?${queryParams}`;
 
     // Send GET request
     fetch(url)
@@ -159,7 +161,7 @@ function sendAction() {
             return response.json();
         })
         .then(data => {
-            console.log("Ping command response:", data);
+            console.debug("Command response:", data);
             streamResponse(data);
         })
         .catch(error => {
@@ -172,7 +174,7 @@ function sendAction() {
 function streamResponse(data) {
     const command_id = data["command_id"]["value"];
     const queryParams = new URLSearchParams({"command_id": command_id}).toString();
-    const url = `../api/progress/?${queryParams}`;
+    const url = `${uri}/progress/?${queryParams}`;
     const outputBox = document.getElementById("outputBox");
 
     // Clear the output box before streaming
@@ -189,7 +191,7 @@ function streamResponse(data) {
             function readStream() {
                 reader.read().then(({ done, value }) => {
                     if (done) {
-                        console.log("Stream ended.");
+                        console.debug("Stream ended.");
                         lastCommand = ""; // reset lastCommand to allow re-selection
                         return;
                     }
@@ -225,17 +227,17 @@ function processOutput(output) {
             let outline;
             let cleanedjson;
             try {
-                console.log("Processing line:", line);
+                console.debug("Processing line:", line);
                 linejson = JSON.parse(line.trim())["command_progress"];
                 if (linejson.hasOwnProperty("time")) {
                     cleanedjson = { ...linejson };
-                    console.log("Cleaning JSON:", cleanedjson);
+                    console.debug("Cleaning JSON:", cleanedjson);
                     delete cleanedjson["time"];
                     delete cleanedjson["command_id"];
                     delete cleanedjson["aws_iot_received_time"];
-                    console.log("Cleaned JSON:", cleanedjson);
+                    console.debug("Cleaned JSON:", cleanedjson);
                     outline = `${linejson["time"]}: ${JSON.stringify(cleanedjson)}`;
-                    console.log("Outline with time:", outline);
+                    console.debug("Outline with time:", outline);
                 } else {
                     if (linejson.hasOwnProperty("command_id")) {
                         delete linejson["command_id"];
@@ -255,7 +257,7 @@ function processOutput(output) {
 
 // Obtain command list from api
 function getCommands() {
-    fetch("../api/get_commands")
+    fetch(`${uri}/get_commands`)
         .then(response => response.json())
         .then(data => {
             buildCommandList(data["commands"]);	
@@ -270,7 +272,7 @@ function getFields(command) {
         buildFormFields([]); // clear fields if no command
         return;
     }
-    fetch("../api/get_command_fields/" + encodeURIComponent(command))
+    fetch(`${uri}/get_command_fields/${encodeURIComponent(command)}`)
         .then(response => response.json())
         .then(data => {
             buildFormFields(data["fields"]);
