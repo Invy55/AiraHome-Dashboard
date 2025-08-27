@@ -111,7 +111,7 @@ window.addEventListener('load', function() {
     // Zone detection (single or dual)
     // if thermostat_2 exists, we have two zones
     let zones = ["zone"];
-    if (data.hasOwnProperty("thermostat_2")) {
+    if (data.hasOwnProperty("thermostat_2") && data["thermostat_2"].hasOwnProperty("serial_number")) {
         // two zones
         showObject('zone_1', true);
         showObject('zone_2', true);
@@ -130,7 +130,6 @@ window.addEventListener('load', function() {
     zones.forEach(zone => {
         let thermostat = `thermostat_${zone === 'zone' ? '1' : zone.split('_')[1]}`;
         // Zone temperatures and humidity
-        console.log(`${zone}_humidity`);
         updateSVGText(`${zone}_humidity`, data[thermostat]['humidity'] || '--');
         updateSVGText(`${zone}_cur_temperature`, data[thermostat]['actual_temperature'] || '--');
         updateSVGText(`${zone}_tar_temperature`, '--');
