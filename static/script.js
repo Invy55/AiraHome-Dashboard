@@ -16,32 +16,52 @@ window.addEventListener('load', function() {
     } else {
         console.error('Failed to load the SVG document.');
     }
-    // Hide battery low indicators by default
+
+    // Initial setup: hide all dynamic elements
+    // - Hide battery low indicators by default
     showObject('zone_1_low_battery', false);
     showObject('zone_2_low_battery', false);
-    // Hide cold/hot indicators by default
+    // - Hide all zones by default
+    showObject('zone_1', false);
+    showObject('zone_2', false);
+    showObject('zone', false);
+    // - Hide all zone pipes by default
+    showObject('zone_1_delivery', false);
+    showObject('zone_1_return', false);
+    showObject('zone_2_delivery', false);
+    showObject('zone_2_return', false);
+    showObject('zone_delivery', false);
+    showObject('zone_return', false);
+    // - Hide cold/hot indicators by default
     showObject('zone_1_cold', false);
     showObject('zone_1_hot', false);
     showObject('zone_2_cold', false);
     showObject('zone_2_hot', false);
+    showObject('zone_cold', false);
+    showObject('zone_hot', false);
+    // - Hide online and error status by default
+    showObject('online_status', false);
+    showObject('error_status', false);
+
     // Load data from GET data param
     let params, data;
     try {
         params = new URLSearchParams(document.location.search);
         data = JSON.parse(params.get("data") ? params.get("data") : "{}")
-        if (!data || Object.keys(data).length == 0) {
+        if (!data || Object.keys(data).length == 0 || params.get("data") === "{\"\":{}}") {
             console.warn('No data provided in the URL parameters.');
-            showObject('online_status', false);
-            showObject('error_status', false);
+            // done -> tell grafana
+            window.parent.postMessage({ action: window.location.href, value: 1 }, document.referrer);
             return;
         }
         console.log('Data loaded from URL parameters:', data);
     } catch (error) {
         console.error('Error parsing data from URL parameters:', error);
-        showObject('online_status', false);
-        showObject('error_status', false);
+        // done -> tell grafana
+        window.parent.postMessage({ action: window.location.href, value: 1 }, document.referrer);
         return;
     }
+
     // Update SVG elements based on the data
     addPulse('online_status');
     // Heatpump active state, allowed states:
@@ -85,61 +105,59 @@ window.addEventListener('load', function() {
     }
 
     // Update temperatures
-    updateSVGText('outside_temperature', data['heat_pump']['current_outdoor_temperature'] || '??');
-    updateSVGText('water_heater_cur_temperature', data['water_heater']['current_hot_water_temperature'] || '??');
-    updateSVGText('water_heater_tar_temperature', data['water_heater']['target_hot_water_temperature'] || '??');
-    updateSVGText('zone_1_humidity', data['thermostat_1']['humidity'] || '??');
-    updateSVGText('zone_1_cur_temperature', data['thermostat_1']['actual_temperature'] || '??');
-    updateSVGText('zone_1_tar_temperature', '--');
-    updateSVGText('zone_2_humidity', data['thermostat_2']['humidity'] || '??');
-    updateSVGText('zone_2_cur_temperature', data['thermostat_2']['actual_temperature'] || '??');
-    updateSVGText('zone_2_tar_temperature', '--');
-
-    // Zones pumps
-    switch(data['thermostat_1']['current_pump_mode_state']) {
-        case "PUMP_MODE_STATE_UNSPECIFIED":
-        case "PUMP_MODE_STATE_IDLE":
-            // case thermostat 1 is off
-            break;
-        case "PUMP_MODE_STATE_HEATING":
-            // case thermostat 1 is heating
-            setActive('zone_1_hot', true);
-            setPipeColor('zone_1_delivery', 'hot');
-            setPipeColor('zone_1_return', 'cold');
-            break;
-        case "PUMP_MODE_STATE_COOLING":
-            // case thermostat 1 is cooling
-            setActive('zone_1_cold', true);
-            setPipeColor('zone_1_delivery', 'cold');
-            setPipeColor('zone_1_return', 'hot');
-            break;
-        default:
-            console.warn(`Unknown pump mode state for thermostat 1: ${data['thermostat_1']['current_pump_mode_state']}`);
+    updateSVGText('outside_temperature', data['heat_pump']['current_outdoor_temperature'] || '--');
+    updateSVGText('water_heater_cur_temperature', data['water_heater']['current_hot_water_temperature'] || '--');
+    updateSVGText('water_heater_tar_temperature', data['water_heater']['target_hot_water_temperature'] || '--');
+    // Zone detection (single or dual)
+    // if thermostat_2 exists, we have two zones
+    let zones = ["zone"];
+    if (data.hasOwnProperty("thermostat_2")) {
+        // two zones
+        showObject('zone_1', true);
+        showObject('zone_2', true);
+        showObject('zone_1_delivery', true);
+        showObject('zone_1_return', true);
+        showObject('zone_2_delivery', true);
+        showObject('zone_2_return', true);
+        zones = ["zone_1", "zone_2"];
+    } else {
+        // single zone
+        showObject('zone', true);
+        showObject('zone_delivery', true);
+        showObject('zone_return', true);
     }
-    switch(data['thermostat_2']['current_pump_mode_state']) {
-        case "PUMP_MODE_STATE_UNSPECIFIED":
-        case "PUMP_MODE_STATE_IDLE":
-            // case thermostat 2 is off
-            break;
-        case "PUMP_MODE_STATE_HEATING":
-            // case thermostat 2 is heating
-            setActive('zone_2_hot', true);
-            setPipeColor('zone_2_delivery', 'hot');
-            setPipeColor('zone_2_return', 'cold');
-            break;
-        case "PUMP_MODE_STATE_COOLING":
-            // case thermostat 2 is cooling
-            setActive('zone_2_cold', true);
-            setPipeColor('zone_2_delivery', 'cold');
-            setPipeColor('zone_2_return', 'hot');
-            break;
-        default:
-            console.warn(`Unknown pump mode state for thermostat 2: ${data['thermostat_2']['current_pump_mode_state']}`);
-    }
-    
-    // Hide battery low indicators if battery is not low
-    showObject('zone_1_low_battery', data['thermostat_1']['warning_low_battery_level'] === 'true' || false);
-    showObject('zone_2_low_battery', data['thermostat_2']['warning_low_battery_level'] === 'true' || false);
+    // Update zone data
+    zones.forEach(zone => {
+        let thermostat = `thermostat_${zone === 'zone' ? '1' : zone.split('_')[1]}`;
+        // Zone temperatures and humidity
+        console.log(`${zone}_humidity`);
+        updateSVGText(`${zone}_humidity`, data[thermostat]['humidity'] || '--');
+        updateSVGText(`${zone}_cur_temperature`, data[thermostat]['actual_temperature'] || '--');
+        updateSVGText(`${zone}_tar_temperature`, '--');
+        // Zone pump status
+        switch(data[thermostat]['current_pump_mode_state']) {
+            case "PUMP_MODE_STATE_UNSPECIFIED":
+            case "PUMP_MODE_STATE_IDLE":
+                // case thermostat is off
+                break;
+            case "PUMP_MODE_STATE_HEATING":
+                // case thermostat is heating
+                setActive('zone_1_hot', true);
+                setPipeColor(`${zone}_delivery`, 'hot');
+                setPipeColor(`${zone}_return`, 'cold');
+                break;
+            case "PUMP_MODE_STATE_COOLING":
+                // case thermostat is cooling
+                setActive(`${zone}_cold`, true);
+                setPipeColor(`${zone}_delivery`, 'cold');
+                setPipeColor(`${zone}_return`, 'hot');
+                break;
+            default:
+                console.warn(`Unknown pump mode state for thermostat 1: ${data[thermostat]['current_pump_mode_state']}`);
+        }
+        // Zone low battery warning
+        showObject(`${zone}_low_battery`, data[thermostat]['warning_low_battery_level'] === 'true' || false);
+    });
 
     // Online and error status
     if(data.hasOwnProperty("error"))
@@ -163,6 +181,7 @@ let svgIds = {
     'water_heater_return': 'g9988',
     'water_heater_hot': 'g11642-0',
     // zone 1
+    'zone_1': 'g9595',
     'zone_1_humidity': 'tspan2407-7-0',
     'zone_1_cur_temperature': 'tspan2407-7-7',
     'zone_1_tar_temperature': 'tspan2407-7',
@@ -172,6 +191,7 @@ let svgIds = {
     'zone_1_cold': 'g9598',
     'zone_1_hot': 'g6363-5-3-4',
     // zone 2
+    'zone_2': 'g9559',
     'zone_2_humidity': 'tspan2407-7-0-1',
     'zone_2_cur_temperature': 'tspan2407-7-7-6',
     'zone_2_tar_temperature': 'tspan2407-7-8',
@@ -180,6 +200,16 @@ let svgIds = {
     'zone_2_low_battery': 'g30748-2',
     'zone_2_cold': 'g9531',
     'zone_2_hot': 'g6363-5-3-4-4',
+    // zone
+    'zone': 'g1479',
+    'zone_humidity': 'tspan1459',
+    'zone_cur_temperature': 'tspan1453',
+    'zone_tar_temperature': 'tspan1447',
+    'zone_delivery': 'g1653',
+    'zone_return': 'g1647',
+    'zone_low_battery': 'g1443',
+    'zone_cold': 'g1477',
+    'zone_hot': 'g1473',
     // online and error status
     'online_status': 'g3185',
     'error_status': 'g9849'
@@ -336,6 +366,7 @@ function setActive(id, active) {
 function addPulse(id) {
     if (view) {
         let element = view.getElementById(svgIds[id]);
+        showObject(id, true); // Ensure the object is visible before adding pulse
         if (element) {
             const origin = computeOrigin(id);
             if (origin) {

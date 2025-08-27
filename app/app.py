@@ -252,15 +252,22 @@ class AiraHomeClient():
                     points.append((self.states_bucket, error_point))
                 
                 # THERMOSTATS
-                zone_points = {"zone_1": Point("thermostat").tag("id", device['id']['value']).tag("zone", 1),
-                                "zone_2": Point("thermostat").tag("id", device['id']['value']).tag("zone", 2)}
+                zone_points = {}
                 for zone, value in states.get("zone_setpoints_heating", {}).items():
+                    if zone not in zone_points:
+                        zone_points[zone] = Point("thermostat").tag("id", device['id']['value']).tag("zone", int(zone.split("_")[1]))
                     zone_points[zone] = zone_points[zone].field("zone_setpoint_heating", value)
                 for zone, value in states.get("zone_temperatures", {}).items():
+                    if zone not in zone_points:
+                        zone_points[zone] = Point("thermostat").tag("id", device['id']['value']).tag("zone", int(zone.split("_")[1]))
                     zone_points[zone] = zone_points[zone].field("zone_temperature", value)
                 for zone, value in states.get("zone_setpoints_cooling", {}).items():
+                    if zone not in zone_points:
+                        zone_points[zone] = Point("thermostat").tag("id", device['id']['value']).tag("zone", int(zone.split("_")[1]))
                     zone_points[zone] = zone_points[zone].field("zone_setpoint_cooling", value)
                 for zone, value in states.get("current_pump_mode_state", {}).items():
+                    if zone not in zone_points:
+                        zone_points[zone] = Point("thermostat").tag("id", device['id']['value']).tag("zone", int(zone.split("_")[1]))
                     zone_points[zone] = zone_points[zone].field("current_pump_mode_state", value)
 
                 for thermostat in states.get("thermostats", []):
