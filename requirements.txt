@@ -1,5 +1,5 @@
 influxdb-client
-pyairahome
+pyairahome==0.1.6
 colorlog
 python-dotenv
 schedule
