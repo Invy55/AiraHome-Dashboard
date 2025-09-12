@@ -42,5 +42,3 @@ Navigate to http://localhost:4000/d/beuirjjdi4cu8c/airahome-dashboard to check t
 ##
 #### Disclaimer
 _This project is an independent, open-source software library developed for interacting with AiraHome heat pumps via their app gRPC APIs. It is not affiliated with, endorsed by, sponsored by, or associated with AiraHome or any of its subsidiaries, affiliates, or partners. The project is not an official product of AiraHome, and the use of this library does not imply any compatibility, support, or approval from AiraHome. All trademarks, service marks, and company names mentioned herein are the property of their respective owners. Use of this library is at your own risk, and the developers are not responsible for any damages, malfunctions, or issues arising from its use with AiraHome or other heat pump systems._
-
-<meta name="google-site-verification" content="y_xDAirtmZPdDrJi4SXkWRP5NjhAAaj0DHgqBvTPqNI" />
